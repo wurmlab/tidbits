@@ -1,0 +1,173 @@
+require 'rake/clean'
+require 'fileutils'
+require 'logger'
+
+# yannickwurm at gmail
+
+CLEAN.include('proteinSeqs.*', 'bestCDS.fasta', 'bestOrfs.fasta')
+LOG = Logger.new(STDOUT)
+
+#### only necessary if cdsSeq doesn't exist
+#desc "setup"
+#file 'cdsSeq.fasta' => File.join('../../data/' + File.basename(Dir.pwd), 'allSequences.fasta') do |task|
+#    FileUtils.ln_s(task.prerequisites.join, task.name)
+#end
+
+
+
+
+######### Rake FAIL BEGIN ###########
+# it looks like a single file task cannot create two files from a single file... 
+# but my clunky old script outputs 'bestCDS.fasta' and 'bestOrfs.fasta' from a single CDS file
+#file ['proteinSeqs.fasta', 'orfNucleotideSeq.fasta'] => 'cdsSeq.fasta' do |task|
+#	 sh "ruby ~/src/ruby/scripts/returnLargestOrfsAndCdsFromNAseq.rb cdsSeq.fasta 50"#
+#	 FileUtils.mv('bestCDS.fasta', 'orfNucleotideSeq.fasta')#
+#	 FileUtils.mv('bestOrf.fasta', 'proteinSeqs.fasta')
+#end
+## 
+##### so Instead I need two tasks:
+
+file 'orfNucleotideSeq.fasta' => 'cdsSeq.fasta' do |t|
+    sh "ruby ~/src/ruby/scripts/returnLargestOrfsAndCdsFromNAseq.rb #{t.prerequisites.join} 50"
+    # my clunky script outputs 'bestCDS.fasta' and 'bestOrfs.fasta'. onl need one here
+    FileUtils.mv('bestCDS.fasta', t.name)
+end
+
+file 'proteinSeqs.fasta' => 'cdsSeq.fasta' do |t|  
+    sh "ruby ~/src/ruby/scripts/returnLargestOrfsAndCdsFromNAseq.rb #{t.prerequisites.join} 50"
+    # my clunky script outputs 'bestCDS.fasta' and 'bestOrfs.fasta'. onl need one here
+    FileUtils.mv('bestOrfs.fasta', t.name)
+end
+######### Rake FAIL END###########
+
+
+
+
+## align with mafft-linsi: accurate with refinement if there is a central big aligning domain
+desc 'make protein alignment'
+file 'proteinSeqs.aln' => ['proteinSeqs.fasta'] do |t|
+    raise IOError, 'mafft-linsi not found' unless command?('mafft-linsi')
+    sh "mafft-linsi #{t.prerequisites.join} > #{t.name}"
+end
+
+### make protein-level tree
+file 'proteinSeqs.aln-gb'                          => ['proteinSeqs.aln'] 
+file 'proteinSeqs.aln-gb.clean'                    => ['proteinSeqs.aln-gb']
+file 'proteinSeqs.aln-gb.clean.phy'                => ['proteinSeqs.aln-gb.clean'] 
+
+desc 'make protein-level tree'
+file 'proteinSeqs.aln-gb.clean.phy_phyml_tree.txt' => ['proteinSeqs.aln-gb.clean.phy'] 
+
+
+
+### make codon-level alignment and nucleotide-level tree
+desc 'make codon alignment' 
+# (we are lucky - order remained the same(reqd for pal2nal))'
+file 'proteinSeqs.aln.cds' => ['proteinSeqs.aln', 'orfNucleotideSeq.fasta'] do |t|
+    raise IOError, 'pal2nal.pl not found' unless command?('pal2nal.pl')
+    sh "pal2nal.pl #{t.prerequisites.join(' ')} -output fasta > #{t.name}"
+end
+
+file 'proteinSeqs.aln.cds-gb'							=> ['proteinSeqs.aln.cds']
+file 'proteinSeqs.aln.cds-gb.clean'						=> ['proteinSeqs.aln.cds-gb']
+file 'proteinSeqs.aln.cds-gb.clean.phy'					=> 'proteinSeqs.aln.cds-gb.clean'
+
+desc 'make nucleotide-level tree from codon alignment'
+file 'proteinSeqs.aln.cds-gb.clean.phy_phyml_tree.txt'	=> ['proteinSeqs.aln.cds-gb.clean.phy']
+
+
+
+desc "default"
+task :default => ['proteinSeqs.aln-gb.clean.phy_phyml_tree.txt',
+                  'proteinSeqs.aln.cds-gb.clean.phy_phyml_tree.txt']
+
+
+
+
+
+############################
+# Generic rules 
+
+# remove crap from fasta file by running it through seqret
+rule '.clean' => lambda { |cleanFasta| find_source_of(cleanFasta) } do |t|    
+    raise IOError, 'seqret not found' unless command?('seqret')
+    sh ['seqret',
+        "-sequence #{t.prerequisites.join(' ')}",
+        "-outseq #{t.name}",
+       ].join(' ')
+end
+
+###### fasta to phylip
+rule '.phy' => lambda { |phylipFromFasta| find_source_of(phylipFromFasta) } do |t|    
+    raise IOError, 'fasta2phylip not found' unless command?('fasta2phylip')
+    sh "fasta2phylip #{t.prerequisites.join(' ')} #{t.name}"
+end
+
+#keeping only good parts using Gblocks codon-level (-t=c)
+rule 'cds-gb' => lambda { |gblockedOutput| gblockedOutput.gsub('-gb','') } do |t|
+    raise IOError, 'Gblocks not found' unless command?('Gblocks')
+    sh "Gblocks #{t.prerequisites.join} -t=c -b4=5 -b5=n" do |ok, status|
+	    # we ignore the status... because Gblocks does not return ok but fail...
+    	raise IOError, "Gblocks made no    #{t.name} file" if !File.exists?(t.name)
+        raise IOError, "Gblocks made empty #{t.name} file" if File.zero?(t.name)
+	end
+end
+
+
+####### keeping only good parts using Gblocks aminoacid-level (-t=a)
+rule 'aln-gb' => lambda { |gblockedOutput| gblockedOutput.gsub('-gb','') } do |t|
+    raise IOError, 'Gblocks not found' unless command?('Gblocks')
+    sh "Gblocks #{t.prerequisites.join} -t=P -b4=5 -b5=n" do |ok, status|
+	    # we ignore the status... because Gblocks does not return ok but fail...
+        raise IOError, "Gblocks made no    #{t.name} file" if !File.exists?(t.name)
+        raise IOError, "Gblocks made empty #{t.name} file" if File.zero?("#{t.name}")
+	end
+end
+
+
+######nucleotide tree first: 'proteinSeqs.aln.cds-gb.clean.phy_phyml_tree.txt'
+rule 'cds-gb.clean.phy_phyml_tree.txt' => lambda { |treeFile| treeFile.gsub('_phyml_tree.txt','') } do |t|
+    raise IOError, 'PhyML_3.0_macOS not found' unless command?('PhyML_3.0_macOS')
+    sh "PhyML_3.0_macOS -f e -i #{t.prerequisites.join} -d nt "
+    raise IOError, "Gblocks made no    #{t.name} file" if !File.exists?(t.name)
+    raise IOError, "Gblocks made empty #{t.name} file" if File.zero?("#{t.name}")
+end
+
+##### making protein tree
+rule '.aln-gb.clean.phy_phyml_tree.txt' => lambda { |treeFile| treeFile.gsub('_phyml_tree.txt','') } do |t|
+    raise IOError, 'PhyML_3.0_macOS not found' unless command?('PhyML_3.0_macOS')
+    sh "PhyML_3.0_macOS -f e -i #{t.prerequisites.join} -d aa "
+    raise IOError, "Gblocks made no    #{t.name} file" if !File.exists?(t.name)
+    raise IOError, "Gblocks made empty #{t.name} file" if File.zero?("#{t.name}")
+end
+
+
+
+
+
+
+
+#################################
+# Rule helpers
+
+# chop extension off file name
+def find_source_of(outputFile)
+    originalFile = outputFile.sub(File.extname(outputFile), '')
+    raise ArgumentError, "#{outputFile} doesn't exist" unless File.exists?(originalFile)
+    raise ArgumentError, "#{outputFile} empty"         if     File.zero?(  originalFile)
+    originalFile
+end
+
+
+
+
+
+######################## Following should be in a library .... 
+
+# check if a command exists - thanks Anurag
+def command?(command)
+    system("which #{ command} > /dev/null 2>&1")
+end
+
+
+
