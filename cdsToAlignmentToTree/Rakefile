@@ -2,7 +2,21 @@ require 'rake/clean'
 require 'fileutils'
 require 'logger'
 
-# yannickwurm at gmail
+#  yannickwurm at gmail dot com
+#####
+#  mini-pipeline that takes a file called "cdsSeq.fasta" and goes through the following steps for tree building:
+#   - tranlsation
+#   + multiple alignment (mafft)
+#     - gblocks to remove crap 
+#     - tree building (phyml)
+#  AND
+#     - codon-level alignment: reverse translated from protein multiple alignment (pal2nal)
+#     - gblocks to remove crap
+#     - tree building (phyml)
+#
+#  depends on a bunch of stuff in my $PATH. 
+
+
 
 CLEAN.include('proteinSeqs.*', 'bestCDS.fasta', 'bestOrfs.fasta')
 LOG = Logger.new(STDOUT)
