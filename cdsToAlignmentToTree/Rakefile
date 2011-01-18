@@ -1,6 +1,5 @@
 require 'rake/clean'
 require 'fileutils'
-require 'logger'
 
 #  yannickwurm at gmail dot com
 #####
@@ -19,7 +18,6 @@ require 'logger'
 
 
 CLEAN.include('proteinSeqs.*', 'bestCDS.fasta', 'bestOrfs.fasta')
-LOG = Logger.new(STDOUT)
 
 #### only necessary if cdsSeq doesn't exist
 #desc "setup"
