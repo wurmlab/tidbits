@@ -1,17 +1,17 @@
 #!/bin/env ruby
+## copyright 2011 yannick wurm
+## yannick . wurm at unil dot ch
+## All rights reserved. If you're making money by using this, you owe me 10%.
+##
+## Subset a fasta file in ruby using bioruby
+##
+## DOCUMENTATION: run ./thisScript -h   or check 'doc = ' below
+
+
 require 'rubygems'
 require 'optparse'
 require 'logger'
 require 'bio'
-
-## copyright 2011 yannick wurm
-## yannick . wurm at unil dot ch
-## All rights reserved
-
-
-## run ./thisScript -h  for documentation; or check 'doc = ' below
-
-
 
 MY_INDEX_EXTENSION = '.yw_r_idx'
 
@@ -41,8 +41,9 @@ end
 # supposes bioinformatics-style-coordinates (inclusive, starting at 1)
 def subsequence(fasta_string, from, to)
   bioseq = Bio::Sequence.input(fasta_string)
-  raise IOError, "Cannot provide #{request}; seq is only" + 
+  raise IOError, "Problem with: '#{bioseq.definition}': requested #{from}-#{to} but seq is only" + 
     " #{bioseq.length} long."    if [from,to].max > bioseq.length
+
   
   seq_id = [bioseq.definition, ':', [from,to].min.to_s, '-', [from,to].max.to_s].join('')
 
@@ -102,7 +103,7 @@ if __FILE__ == $0  # don't run if loaded for testing
   opts.parse!
   [ :input_fasta, :subset].each do |option|
     if options[ option].nil?
-      $log.warn "All options required" +  opts.help
+      puts "All options required" +  opts.help
       exit
     end
   end
