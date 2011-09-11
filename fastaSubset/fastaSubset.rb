@@ -68,7 +68,7 @@ if __FILE__ == $0  # don't run if loaded for testing
   $log = Logger.new(STDERR)
 
   
-  doc = ['Subset FASTA file based on seq ids and possibly coordinates ',
+  doc = ["Subset FASTA file based on seq ids and possibly coordinates:\n",
          ' * Coordinates are given as eg: Si_gnF.scaffold06790:221960-223960',
          ' * retreive a whole 1000nt long sequence with "seq" (no coordinates) or "seq:1-1000"',
          ' * if end<start (eg: scaffold1:4300-4000), return reversecomplement (implies DNA).',
@@ -103,7 +103,7 @@ if __FILE__ == $0  # don't run if loaded for testing
   opts.parse!
   [ :input_fasta, :subset].each do |option|
     if options[ option].nil?
-      puts "All options required" +  opts.help
+      puts "All options required\n" +  opts.help
       exit
     end
   end
