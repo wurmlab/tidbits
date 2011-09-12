@@ -9,9 +9,9 @@
 
 
 unless RUBY_VERSION == "1.8.7"
-  puts "Apologies, #{$1} requires ruby 1.8.7. You are running #{RUBY_VERSION}.\n"
-  puts " Well the indexing seemed to be broken on my 1.9.2..."
-  puts "An easy way of getting 1.8.7 is by using Ruby Version Manager."
+  STDERR << "Apologies, #{$1} requires ruby 1.8.7. You are running #{RUBY_VERSION}.\n"
+  STDERR << " Well the indexing seemed to be broken on my 1.9.2...\n"
+  STDERR << "An easy way of getting 1.8.7 is by using Ruby Version Manager.\n"
   exit
 end
 
