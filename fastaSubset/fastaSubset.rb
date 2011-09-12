@@ -8,6 +8,14 @@
 ## DOCUMENTATION: run ./thisScript -h   or check 'doc = ' below
 
 
+unless RUBY_VERSION == "1.8.7"
+  puts "Apologies, #{$1} requires ruby 1.8.7. You are running #{RUBY_VERSION}.\n"
+  puts " Well the indexing seemed to be broken on my 1.9.2..."
+  puts "An easy way of getting 1.8.7 is by using Ruby Version Manager."
+  exit
+end
+
+
 require 'rubygems'
 require 'optparse'
 require 'logger'
@@ -65,6 +73,8 @@ end
 
 
 if __FILE__ == $0  # don't run if loaded for testing
+
+
   $log = Logger.new(STDERR)
 
   
