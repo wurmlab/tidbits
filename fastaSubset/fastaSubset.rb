@@ -165,6 +165,14 @@ if __FILE__ == $0  # don't run if loaded for testing
   requested_seqs.each do |request|
     sequence_id, coordinates = request.split(':')
     fasta_sequence           = index.get_by_id(sequence_id)  # returned as fasta string
+    fasta_sequence = index.get_by_id(sequence_id.gsub('.', '_')) if fasta_sequence.empty?
+
+    if fasta_sequence.empty? # replace first and last '.' by '_'
+      new_id         = sequence_id.clone.sub(".", "_") # first
+      new_id = new_id.reverse.sub(".", "_").reverse
+      fasta_sequence = index.get_by_id(new_id)
+    end
+
 
     if fasta_sequence == '' or fasta_sequence.nil?
       $log.warn "Not found in #{input_fasta}: '#{sequence_id}'. Requested: '#{request}'."
