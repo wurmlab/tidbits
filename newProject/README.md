@@ -6,9 +6,11 @@ Usage example:
 
 
 Creates the following files: 
+
     2013-03-20-myBigAnalsysis/doc/
     2013-03-20-myBigAnalsysis/data/2013-03-20-firstAnalysis
     2013-03-20-myBigAnalsysis/results/2013-03-20-firstAnalysis 
+
 
 And copies relevant analysis template files to results.
 
