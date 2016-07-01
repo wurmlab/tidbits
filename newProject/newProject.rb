@@ -1,4 +1,4 @@
-#!/bin/env ruby 
+#!/usr/bin/env ruby 
 ### copyright: yannick wurm
 ### author:    yannick dot wurm at insalien dot org                             http://yannick.poulet.org
 ### created:   2010
@@ -17,8 +17,6 @@
 ###
 ###         and creates a soft link from within results/currentDate-subProject to relevant data folder.
 
-
-require 'rubygems'
 require 'main'
 require 'fileutils'
 
@@ -34,20 +32,16 @@ Main  {
     validate    { |name| name.length >0 }
   }
   
-  
-  DocDir        = 'docs'
-  DataSubDir    = 'dataSub'
-  ResultsSubDir = 'resultsSub'
-  
   def run
     today         = [Time.now.year, "%02d" % Time.now.month, "%02d" % Time.now.day].join('-')
     subProject    = today + '-' + params['subProject' ].value
     projectDir    = today + '-' + params['projectName'].value
     
     relativeDirPaths = {
-      DocDir        => 'doc/',
-      DataSubDir    => File.join('data',    subProject),
-      ResultsSubDir => File.join('results', subProject)
+      :docs    => 'doc/',
+      :data    => File.join('data',    subProject),
+      :results => File.join('results', subProject),
+      :soft    => 'soft/'
     }
     
     completeDirPaths = relativeDirPaths.clone 
@@ -58,11 +52,13 @@ Main  {
       self.info('Created: '+ completeDirPaths[dir])
     end
 
-    FileUtils.ln_s( File.join("../../", relativeDirPaths[DataSubDir]), File.join(completeDirPaths[ResultsSubDir], "data"))
+    FileUtils.ln_s( File.join("../../", relativeDirPaths[:data]), File.join(completeDirPaths[:results], "input"))
     self.info('Linked data dir.')
 
-    FileUtils.cp(File.expand_path('~/src/templates/getResults.rb'),   completeDirPaths[ResultsSubDir])
-    FileUtils.cp(File.expand_path('~/src/templates/WHATIMDOING.txt'), completeDirPaths[DocDir])
-    self.info('Created getResults.rb and WHATIMDOING.txt')
+
+    self.info('Create WHATIDID.txt (or .md or .Rmd or .sh) files at appropriate levels')
+#    FileUtils.cp(File.expand_path('~/src/templates/getResults.rb'),   completeDirPaths[:results])
+#    FileUtils.cp(File.expand_path('~/src/templates/WHATIDID.md'), completeDirPaths[:docs])
+#    self.info('Created getResults.rb and WHATIMDOING.txt')
   end
 }
