@@ -56,7 +56,7 @@ Main  {
     self.info('Linked data dir.')
 
 
-    self.info('Create WHATIDID.txt (or .md or .Rmd or .sh) files at appropriate levels')
+    self.info('Please be sure to create WHATIDID.txt (or .md or .Rmd or .sh) files at appropriate levels')
 #    FileUtils.cp(File.expand_path('~/src/templates/getResults.rb'),   completeDirPaths[:results])
 #    FileUtils.cp(File.expand_path('~/src/templates/WHATIDID.md'), completeDirPaths[:docs])
 #    self.info('Created getResults.rb and WHATIMDOING.txt')
