@@ -39,7 +39,7 @@ Main  {
     
     relativeDirPaths = {
       :docs    => 'doc/',
-      :data    => File.join('data',    subProject),
+      :data    => File.join('input',    subProject),
       :results => File.join('results', subProject),
       :soft    => 'soft/'
     }
