@@ -8,8 +8,8 @@
 ###           projectName/doc
 ###           projectName/results
 ###           projectName/results/currentDate-subProject
-###           projectName/data
-###           projectName/data/currentDate-subProject
+###           projectName/input
+###           projectName/input/currentDate-subProject
 ###
 ###         and text files:
 ###           projectName/results/getResults.rb
@@ -33,6 +33,8 @@ Main  {
   }
   
   def run
+    self.logger.datetime_format = "%H:%I"
+    self.info("We're following http://bit.ly/projectstruct project structure")
     today         = [Time.now.year, "%02d" % Time.now.month, "%02d" % Time.now.day].join('-')
     subProject    = today + '-' + params['subProject' ].value
     projectDir    = today + '-' + params['projectName'].value
@@ -53,7 +55,7 @@ Main  {
     end
 
     FileUtils.ln_s( File.join("../../", relativeDirPaths[:data]), File.join(completeDirPaths[:results], "input"))
-    self.info('Linked data dir.')
+    self.info('Linked input dir.')
 
 
     self.info('Please be sure to create WHATIDID.txt (or .md or .Rmd or .sh) files at appropriate levels')
